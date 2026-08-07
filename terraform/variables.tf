@@ -1,10 +1,19 @@
 variable "aws_region" {
-  description = "AWS Region for infrastructure deployment"
+  description = "AWS Region"
   type        = string
-  default     = "ap-south-1"
 }
 
 variable "vpc_cidr" {
-  description = "CIDR block for the VPC"
+  description = "VPC CIDR"
+  type        = string
+}
+
+variable "public_subnet_cidr" {
+  description = "Public Subnet CIDR"
+  type        = string
+}
+
+variable "availability_zone" {
+  description = "Availability Zone"
   type        = string
 }
