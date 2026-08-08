@@ -2,14 +2,12 @@ pipeline {
     agent any
 
     stages {
-
         stage('Environment Check') {
             steps {
                 sh '''
                     echo "=== Environment ==="
                     java -version
                     docker --version
-
                     echo "=== Workspace ==="
                     pwd
                     ls -la
@@ -40,7 +38,6 @@ pipeline {
         success {
             echo 'OpsPilot CI Pipeline completed successfully!'
         }
-
         failure {
             echo 'OpsPilot CI Pipeline failed.'
         }
