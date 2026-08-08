@@ -3,19 +3,13 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git branch: 'main',
-                    url: 'git@github.com:amitd1299/opspilot.git'
-            }
-        }
-
         stage('Environment Check') {
             steps {
                 sh '''
                     echo "=== Environment ==="
                     java -version
                     docker --version
+
                     echo "=== Workspace ==="
                     pwd
                     ls -la
