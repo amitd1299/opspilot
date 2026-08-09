@@ -1,0 +1,20 @@
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+@app.route("/health")
+def health():
+    return jsonify({
+        "status": "healthy",
+        "service": "OpsPilot"
+    })
+
+@app.route("/")
+def home():
+    return jsonify({
+        "message": "OpsPilot DevOps Control Center",
+        "status": "running"
+    })
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

@@ -3,3 +3,5 @@ README_local.md
 terraform.tfstate
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
+
+backend/venv/
