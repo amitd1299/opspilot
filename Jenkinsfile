@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'
+    }
+
     stages {
         stage('Environment Check') {
             steps {
@@ -43,16 +47,25 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Kubernetes Deploy') {
             steps {
-                echo 'Deploying OpsPilot application'
+                echo 'Deploying OpsPilot application to Kubernetes'
                 sh '''
-                    docker rm -f opspilot-backend 2>/dev/null || true
-                    docker run -d --name opspilot-backend -p 5000:5000 opspilot-backend:1.0
-                    sleep 5
-                    curl -f http://localhost:5000/health
-                    echo "=== Deployment successful ==="
-                    docker ps
+                    kubectl apply -f k8s/opspilot.yaml
+                    kubectl rollout status deployment/opspilot-backend --timeout=120s
+                '''
+            }
+        }
+
+        stage('Verify') {
+            steps {
+                echo 'Verifying Kubernetes deployment'
+                sh '''
+                    kubectl get pods -o wide
+                    kubectl get svc opspilot-backend
+                    kubectl get deployment opspilot-backend
+                    curl -f http://localhost:30278/health
+                    echo "=== Kubernetes deployment successful ==="
                 '''
             }
         }

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opspilot-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opspilot-backend
+  template:
+    metadata:
+      labels:
+        app: opspilot-backend
+    spec:
+      containers:
+        - name: opspilot-backend
+          image: opspilot-backend:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opspilot-backend
+spec:
+  selector:
+    app: opspilot-backend
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+  type: NodePort
