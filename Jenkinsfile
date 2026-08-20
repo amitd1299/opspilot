@@ -13,6 +13,7 @@ pipeline {
                     echo "=== Environment ==="
                     java -version
                     docker --version
+
                     echo "=== Workspace ==="
                     pwd
                     ls -la
@@ -23,19 +24,31 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building OpsPilot backend'
-                sh 'ls -la backend'
+
+                sh '''
+                    ls -la backend
+                '''
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Testing OpsPilot backend'
+
                 sh '''
                     docker rm -f opspilot-test 2>/dev/null || true
+
                     docker build -t opspilot-backend:test ./backend
-                    docker run -d --name opspilot-test -p 5001:5000 opspilot-backend:test
+
+                    docker run -d \
+                        --name opspilot-test \
+                        -p 5001:5000 \
+                        opspilot-backend:test
+
                     sleep 5
+
                     curl -f http://localhost:5001/health
+
                     docker rm -f opspilot-test
                 '''
             }
@@ -44,7 +57,14 @@ pipeline {
         stage('Docker Build') {
             steps {
                 echo 'Building OpsPilot Docker image'
-                sh 'docker build -t opspilot-backend:1.0 ./backend'
+
+                sh '''
+                    docker build \
+                        -t opspilot-backend:1.0 \
+                        ./backend
+
+                    docker images | grep opspilot-backend
+                '''
             }
         }
 
@@ -58,17 +78,17 @@ pipeline {
                     passwordVariable: 'NEXUS_PASS'
                 )]) {
                     sh '''
-                        echo "$NEXUS_PASS" | docker login 13.207.189.235:8084 \
+                        echo "$NEXUS_PASS" | docker login localhost:8084 \
                             -u "$NEXUS_USER" \
                             --password-stdin
 
                         docker tag opspilot-backend:1.0 \
-                            13.207.189.235:8084/opspilot-backend:1.0
+                            localhost:8084/opspilot-backend:1.0
 
                         docker push \
-                            13.207.189.235:8084/opspilot-backend:1.0
+                            localhost:8084/opspilot-backend:1.0
 
-                        docker logout 13.207.189.235:8084
+                        docker logout localhost:8084
                     '''
                 }
             }
@@ -77,9 +97,13 @@ pipeline {
         stage('Kubernetes Deploy') {
             steps {
                 echo 'Deploying OpsPilot application to Kubernetes'
+
                 sh '''
                     kubectl apply -f k8s/opspilot.yaml
-                    kubectl rollout status deployment/opspilot-backend --timeout=120s
+
+                    kubectl rollout status \
+                        deployment/opspilot-backend \
+                        --timeout=120s
                 '''
             }
         }
@@ -87,11 +111,16 @@ pipeline {
         stage('Verify') {
             steps {
                 echo 'Verifying Kubernetes deployment'
+
                 sh '''
                     kubectl get pods -o wide
+
                     kubectl get svc opspilot-backend
+
                     kubectl get deployment opspilot-backend
+
                     curl -f http://localhost:30278/health
+
                     echo "=== Kubernetes deployment successful ==="
                 '''
             }
@@ -99,6 +128,7 @@ pipeline {
     }
 
     post {
+
         success {
             echo 'OpsPilot CI/CD Pipeline completed successfully!'
         }
@@ -108,7 +138,9 @@ pipeline {
         }
 
         always {
-            sh 'docker rm -f opspilot-test 2>/dev/null || true'
+            sh '''
+                docker rm -f opspilot-test 2>/dev/null || true
+            '''
         }
     }
 }
