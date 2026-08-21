@@ -99,9 +99,17 @@ pipeline {
                 echo 'Deploying OpsPilot application to Kubernetes'
 
                 sh '''
-                    kubectl apply -f k8s/opspilot.yaml
+                    set -e
 
-                    kubectl rollout status \
+                    echo "=== Import image into K3s ==="
+                    docker save opspilot-backend:1.0 | sudo k3s ctr images import -
+
+                    echo "=== Apply Kubernetes manifests ==="
+                    sudo k3s kubectl apply -f k8s/opspilot.yaml
+                    sudo k3s kubectl apply -f k8s/ingress.yaml
+
+                    echo "=== Rollout status ==="
+                    sudo k3s kubectl rollout status \
                         deployment/opspilot-backend \
                         --timeout=120s
                 '''
@@ -113,13 +121,15 @@ pipeline {
                 echo 'Verifying Kubernetes deployment'
 
                 sh '''
-                    kubectl get pods -o wide
+                    set -e
 
-                    kubectl get svc opspilot-backend
+                    sudo k3s kubectl get pods -o wide
+                    sudo k3s kubectl get svc opspilot-backend
+                    sudo k3s kubectl get deployment opspilot-backend
+                    sudo k3s kubectl get ingress opspilot-ingress
 
-                    kubectl get deployment opspilot-backend
-
-                    curl -f http://localhost:30278/health
+                    echo "=== Application health check ==="
+                    curl -f http://localhost/health
 
                     echo "=== Kubernetes deployment successful ==="
                 '''
